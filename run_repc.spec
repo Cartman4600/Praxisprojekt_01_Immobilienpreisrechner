@@ -2,11 +2,11 @@
 
 
 a = Analysis(
-    ['immobilien_preis_rechner_clean.py'],
+    ['run_repc.py'],
     pathex=[],
     binaries=[],
-    datas=[('Logo.png', '.'),  # Include Logo.png in the root of the dist folder
-           ('icon.ico', '.')  # Include icon.ico in the root of the dist folder
+    datas=[('assets/Logo.png', 'assets'),
+           ('assets/icon.ico', 'assets')  
 	],
     hiddenimports=[],
     hookspath=[],
@@ -24,7 +24,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='immobilien_preis_rechner',
+    name='repc',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -37,5 +37,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon.ico'],
+    icon='assets/icon.ico',
 )

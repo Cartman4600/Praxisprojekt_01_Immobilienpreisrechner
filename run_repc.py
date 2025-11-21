@@ -1,18 +1,4 @@
 #######################
-# .exe erstellen:
-# 1. pyinstaller installieren: 
-# pip istall pyinstaller
-# 2. pyinstaller laufen lassen um eine .spec Datei zu erstellen
-# oder eine vorhandene editieren:
-# pyinstaller --onefile --noconsole --icon=icon.ico immobilien_preis_rechner_clean.py
-#  -> es wird vermutlich beim ersten mal nicht klappen, sprich die Dateien wurden nicht mit in die exe-Datei gepackt
-# 3. immobilien_preis_rechner_clean.SPEC öffnen und bearbeiten. Unter Data müsssne die Pfade der Dateien eingeflegt werden:
-#     datas=[('Logo.png', '.'),
-#           ('icon.ico', '.')  
-#           ],
-#######################
-
-#######################
 # Import
 #######################
 
@@ -23,7 +9,7 @@ import tkinter as tk                               # Standard-Modul für die Ers
                                                    # Erstellt Fenster, Buttons, Textfelder und andere GUI-Elemente erstellen
 from tkinter import  ttk                           # bietet erweiterte GUI-Komponenten : ttk.Button, ttk.Entry und ttk.Combobox
 from tkinter import messagebox                     # Erstellt einfache Pop-up-Nachrichten in der GUI wie Fehlermeldungen oder Warnungen
-from tkinter.filedialog import askopenfile         # Datei-Dialog, mit dem der Benutzer eine Datei auswählen kann. Das Modul ermöglicht es, eine Datei zu laden z.B. eine Excel-Datei
+from tkinter.filedialog import askopenfilename     # Datei-Dialog, mit dem der Benutzer eine Datei auswählen kann. Das Modul ermöglicht es, eine Datei zu laden z.B. eine Excel-Datei
 from tkinter import Toplevel                       # Erstellt neue Fenster (sogenannte "Top-Level"-Fenster). Unabhängige Fenster. Wird für das Impressum verwendet
 import datetime as dt                              # Bibliothek zur Arbeit mit Datum und Uhrzeit. Wird für das akutelle Jahr verwendet
 from PIL import Image, ImageTk                     # (Python Imaging Library) ist eine Bibliothek zur Bildverarbeitung. 
@@ -31,6 +17,10 @@ from PIL import Image, ImageTk                     # (Python Imaging Library) is
 import os                                          # Modul, das eine Schnittstelle zu Betriebssystemfunktionen bereitstellt. 
                                                    # Es hilft, mit Dateien und Verzeichnissen zu arbeiten, Pfade zu erstellen oder zu analysieren und Umgebungsvariablen zu verwenden.
 import sys                                         # Ermöglicht den Zugriff auf bestimmte Systemfunktionen und -parameter. Hier im Speziellen: Pfade und Verzeichnisstruktur
+from functools import partial
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+ASSETS = os.path.join(ROOT, 'assets')
 
 #######################
 # Standardwerte (aus der Excel Datei) und Variablen initiieren
@@ -163,17 +153,17 @@ class Immobilie:
 # TKinter Fenster mit Menu erstellen
 #######################
 
-def resource_path(relative_path):                           # Pfade und Verzeichnisstruktur bestimmen. Die Exe von Pyinstaller --onefile konnte die Bilder nicht finden.
-    """ """
-    try:                                                    # Zunächst wird versucht, den sys._MEIPASS zu verwenden.
-         base_path = sys._MEIPASS                           # Dieser Wert wird von PyInstaller gesetzt, wenn eine Python-Anwendung als ausführbare Datei gepackt wurde.
-                                                            # sys._MEIPASS gibt den temporären Ordner an, in dem PyInstaller die Ressourcen der Anwendung ablegt.
+def resource_path(relative_path, assets):            # Pfade und Verzeichnisstruktur bestimmen. Die Exe von Pyinstaller --onefile konnte die Bilder nicht finden.
+   """ """
+   try:                                                 # Zunächst wird versucht, den sys._MEIPASS zu verwenden.
+      base_path = os.path.join(sys._MEIPASS, "assets")  # Dieser Wert wird von PyInstaller gesetzt, wenn eine Python-Anwendung als ausführbare Datei gepackt wurde.
+                                                        # sys._MEIPASS gibt den temporären Ordner an, in dem PyInstaller die Ressourcen der Anwendung ablegt.
 
-    except Exception:                                       # Falls sys._MEIPASS nicht gesetzt ist (also, wenn der Code nicht als ausführbare Datei läuft, 
-         base_path = os.path.abspath(".")                   # sondern direkt als Skript), wird der base_path auf das aktuelle Arbeitsverzeichnis gesetzt (os.path.abspath(".")).
+   except Exception:                               # Falls sys._MEIPASS nicht gesetzt ist (also, wenn der Code nicht als ausführbare Datei läuft, 
+         base_path = assets                          # sondern direkt als Skript), wird der base_path auf das aktuelle Arbeitsverzeichnis gesetzt (os.path.abspath(".")).
 
-    return os.path.join(base_path, relative_path)           # Am Ende wird der vollständige Pfad zur Ressource durch die Funktion os.path.join(base_path, relative_path) gebildet,
-                                                            # der den Basis-Pfad (entweder sys._MEIPASS oder das aktuelle Verzeichnis) mit dem relativ angegebenen Pfad der Ressource kombiniert.
+   return os.path.join(base_path, relative_path)   # Am Ende wird der vollständige Pfad zur Ressource durch die Funktion os.path.join(base_path, relative_path) gebildet,
+                                                   # der den Basis-Pfad (entweder sys._MEIPASS oder das aktuelle Verzeichnis) mit dem relativ angegebenen Pfad der Ressource kombiniert.
 
 # Real Estate Price Calculator REPC
 window = tk.Tk()                                                                                     # Erstellt ein GUI Fenstser
@@ -181,14 +171,14 @@ window = tk.Tk()                                                                
 window.geometry("700x370")                                                                           # Legt die Größe des Fensters fest
 window.resizable(False, False)                                                                       # Fenstergröße kann nicht verändert werden
 window.title("Real Estate Price Calculator")                                                         # Gibt dem Fenster einen Titel
-icon_path = resource_path('icon.ico')                                                                # Path für Icons in der EXE
+icon_path = resource_path('icon.ico', ASSETS)                                                          # Path für Icons in der EXE
 window.wm_iconbitmap(icon_path)                                                                      # Setzt das Icon
 
 # Menubar erstellen
 menubar = tk.Menu(window)                                                                            # Erstellt eine Menubar für das Fenster window
                                                                                                       
 # Menubar Funktionen
-def donothing():                                                                                     # Placeholder
+def donothing():                                                                                      # Placeholder
    pass
 
 def change_language() -> None:                                                                        # Noch nicht fertig
@@ -197,50 +187,55 @@ def change_language() -> None:                                                  
 def config_load() -> None:                                                                            # Läd eine Konfig-Excel Datei
    """  """
 
-   file = askopenfile(mode ='r', filetypes =[('Excel', '*.xlsx')])                                    # Zeigt nur .xlsx Dateien an
+   file_path = askopenfilename(title="Konfiguarationsdatei wählen", 
+                               filetypes =[('Excel', '*.xlsx')]                                       # Zeigt nur .xlsx Dateien an
+               )                                                                                   
 
-   if file is not None:
-      file_path = file.name
+   if not file_path:
+      return
 
-   config_df = pd.read_excel(file_path, sheet_name="Preisinfo")                                       # Pandas liest Excel Datei in ein Dataframe ein
+   try:
+      config_df = pd.read_excel(file_path, sheet_name="Preisinfo")                                      # Pandas liest Excel Datei in ein Dataframe ein
 
-   bundeslaender_config_dict = dict(zip(list(config_df["Bundesland"].dropna()), 
-                                        list(config_df["B-Kostenfaktor"].dropna())))                  # dropna ignoriert NaN Einträge
-   region_config_dict        = dict(zip(list(config_df["Region"].dropna()), 
-                                        list(config_df["R-Kostenfaktor"].dropna())))                  # Erstellung der Dictionaries
-   ausstattung_config_dict   = dict(zip(list(config_df["Ausstattung"].dropna()), 
-                                        list(config_df["A-Kostenfaktor"].dropna())))
-   hausart_config_dict       = dict(zip(list(config_df["Hausart"].dropna()), 
-                                        list(config_df["H-Kostenfaktor"].dropna())))
+      bundeslaender_config_dict = dict(zip(list(config_df["Bundesland"].dropna()), 
+                                          list(config_df["B-Kostenfaktor"].dropna())))                  # dropna ignoriert NaN Einträge
+      region_config_dict        = dict(zip(list(config_df["Region"].dropna()), 
+                                          list(config_df["R-Kostenfaktor"].dropna())))                  # Erstellung der Dictionaries
+      ausstattung_config_dict   = dict(zip(list(config_df["Ausstattung"].dropna()), 
+                                          list(config_df["A-Kostenfaktor"].dropna())))
+      hausart_config_dict       = dict(zip(list(config_df["Hausart"].dropna()), 
+                                          list(config_df["H-Kostenfaktor"].dropna())))
 
 
-   grundstueck_config_preis  = list(config_df["Preis"])[0]
-   wohnflaeche_config_preis  = list(config_df["Preis"])[1]
-   architekt_config_rate     = list(config_df["Preis"])[2]
-   makler_config_rate        = list(config_df["Preis"])[3]
-   denkmalschutz_config_rate = list(config_df["Preis"])[4]
-   baujahr_config_rate       = list(config_df["Preis"])[5]
+      grundstueck_config_preis  = list(config_df["Preis"])[0]
+      wohnflaeche_config_preis  = list(config_df["Preis"])[1]
+      architekt_config_rate     = list(config_df["Preis"])[2]
+      makler_config_rate        = list(config_df["Preis"])[3]
+      denkmalschutz_config_rate = list(config_df["Preis"])[4]
+      baujahr_config_rate       = list(config_df["Preis"])[5]
 
-   messagebox.showerror("Meldung","Konfiguration geladen!")
-   global config_status, config_list                                          # globale Variablen
-   config_status = True
-   config_list =   [bundeslaender_config_dict,
-                    region_config_dict,
-                    ausstattung_config_dict,
-                    hausart_config_dict,
-                    grundstueck_config_preis,
-                    wohnflaeche_config_preis,
-                    architekt_config_rate,
-                    makler_config_rate,
-                    denkmalschutz_config_rate,
-                    baujahr_config_rate
-                   ]
-   combobox_bundesland["values"]  = list(bundeslaender_config_dict.keys())      # Combobox-Werte ändern
-   combobox_region["values"]      = list(region_config_dict.keys())
-   combobox_ausstattung["values"] = list(ausstattung_config_dict.keys())
-   combobox_hausart["values"]     = list(hausart_config_dict.keys())
-   reset_all()                                                                  # Alle Werte zurücksetzen 
-
+      messagebox.showerror("Meldung","Konfiguration geladen!")
+      global config_status, config_list                                          # globale Variablen
+      config_status = True
+      config_list =   [bundeslaender_config_dict,
+                     region_config_dict,
+                     ausstattung_config_dict,
+                     hausart_config_dict,
+                     grundstueck_config_preis,
+                     wohnflaeche_config_preis,
+                     architekt_config_rate,
+                     makler_config_rate,
+                     denkmalschutz_config_rate,
+                     baujahr_config_rate
+                     ]
+      combobox_bundesland["values"]  = list(bundeslaender_config_dict.keys())      # Combobox-Werte ändern
+      combobox_region["values"]      = list(region_config_dict.keys())
+      combobox_ausstattung["values"] = list(ausstattung_config_dict.keys())
+      combobox_hausart["values"]     = list(hausart_config_dict.keys())
+      reset_all()                                                                  # Alle Werte zurücksetzen
+   except Exception: 
+      messagebox.showerror("Fehler","Ungültige Datei")
+      return
 
 def config_delete() -> None:                                                    # Standardwerte wiederhergestellt
    """  """
@@ -508,7 +503,7 @@ def button_berechnung_command() -> None:
 #######################
 # Button Funktion: PDF Erstellung, 
 #######################
-def pdf_create():
+def pdf_create(root):
    """  """
    try:
       # Benutzeingaben  
@@ -560,8 +555,15 @@ def pdf_create():
       denkmalschutz_text = "Ja" if denkmalschutz_status else "Nein"
 
       # PDF erstellen
+
+      if getattr(sys, 'frozen', False):
+         exe_dir = os.path.dirname(sys.executable)
+      else:
+         exe_dir = ROOT   
+
       filename = "Immobilien_Schaetzwert.pdf"
-      c = canvas.Canvas(filename, pagesize = A4)                                    # Erstellt PDF
+      path = os.path.join(exe_dir, filename)
+      c = canvas.Canvas(path, pagesize = A4)                                    # Erstellt PDF
       c.setFont("Courier", 18)                                                      # Font und Schriftgröße
       c.drawString(100, 750, "Immobilien Schätzwert Berechnung")                    # Schreibt einen String in die PDF an den angegebenen Positionen
 
@@ -627,7 +629,7 @@ def reset_all() -> None:
 
 label_welcome = tk.Label(window, text='Willkommen!')    # Erstellt ein Label im Fenster "window"
 
-bild_pfad = resource_path('Logo.png')                   # Bildpfad setzen mit Hilfe der resource_path Funktion
+bild_pfad = resource_path('Logo.png', ASSETS)             # Bildpfad setzen mit Hilfe der resource_path Funktion
 image = Image.open(bild_pfad)                           # Bild laden
 image = image.resize((340, 200))                        # Bildgröße auf 340x200 Pixel ändern
 photo = ImageTk.PhotoImage(image)
@@ -640,7 +642,7 @@ button_berechnung = tk.Button(window, text="Berechne", width=14,command=button_b
 # Button Reset
 button_reset = tk.Button(window, text="Reset", width=14, command=reset_all)                         # Erstellt Button mit der reset Funktion
 # Button PDF
-button_pdf = tk.Button(window, text='PDF erstellen', width=14, command=pdf_create)                  # Erstellt Button mit der pdf Funktion
+button_pdf = tk.Button(window, text='PDF erstellen', width=14, command=partial(pdf_create, ROOT))   # Erstellt Button mit der pdf Funktion
 
 # Label Ausgabe
 label_output_text = tk.Label(window, text="")
